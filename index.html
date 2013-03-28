@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+  <!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="pt-br"> <![endif]-->
+  <!--[if IE 7]>    <html class="no-js ie7 oldie" lang="pt-br"> <![endif]-->
+  <!--[if IE 8]>    <html class="no-js ie8 oldie" lang="pt-br"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html class="no-js" lang="pt-br"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+
+    <style>
+      
+      body{
+        background: black;
+      }
+
+      #drumPanel{
+        background: white;
+        margin: 6px;
+        padding: 6px;
+        height: 850px;
+
+      }
+
+      #drumRowBeat{
+        border: 1px solid black;
+        height: 70px;
+        margin: 6px;
+        padding: 6px;
+        padding-left: 152px;
+
+      }
+
+      #drumRowBeat .beat{
+        height: 40px;
+        width: 40px;
+        float: left;
+        margin: 6px;
+        padding: 6px;
+        border: 1px solid black;
+        
+
+      }
+
+      #drumRowBeat .beat.on{
+        background: red;
+      }
+
+      #drumPad{
+        border: 1px solid black;
+        margin: 6px;
+        padding: 6px;
+        
+        height: 700px;
+      }
+      #drumPad div{
+        float: left;
+      }
+
+      #drumPad .pad, #drumPad .namedPad{
+        width: 40px;
+        float: left;
+        margin: 6px;
+        padding: 6px;
+        border: 1px solid black;
+        
+
+      }
+      #drumPad .namedPad{
+
+        width: 120px;
+
+      }
+      #drumPad .pad.on{
+        background: yellow;
+
+      }
+
+
+    </style>
+  
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js?ver=1"></script>          
+    
+    <script type="text/javascript">
+	
+	var context;
+	window.addEventListener('load', init, false);
+	function init() {
+	  try {
+		context = new webkitAudioContext();
+		alert('Web Audio API is supported');
+	  }
+	  catch(e) {
+		alert('Web Audio API is not supported in this browser');
+	  }
+	}
+
+    $(document).ready(function() {
+
+		function drumDJ(){
+
+		this.power = false;
+		this.powerId = 0;
+		this.beat = 0;
+		this.numberPads = 16;
+		this.music = [];
+		this.drumSet = [
+			["Hi Hat Open", "electrodrm/openhihat", new Audio('audio/electrodrm/openhihat.ogg')],
+			["Hi Hat Closed", "electrodrm/closedhihat", new Audio('audio/electrodrm/closedhihat.ogg')],
+			["Claves", "electrodrm/claves", new Audio('audio/electrodrm/claves.ogg')],
+			["Handclap", "electrodrm/handclap", new Audio('audio/electrodrm/handclap.ogg')],
+			["More Cowbell", "electrodrm/cowbell", new Audio('audio/electrodrm/cowbell.ogg')],
+			["Cowbell", "electrodrm/cowbell-lo", new Audio('audio/electrodrm/cowbell-lo.ogg')],
+			["Crash 1", "electrodrm/crashcymbal1", new Audio('audio/electrodrm/crashcymbal1.ogg')],
+			["Mid Tom 2", "electrodrm/midtom2", new Audio('audio/electrodrm/midtom2.ogg')],
+			["Mid Tom 1", "electrodrm/midtom1", new Audio('audio/electrodrm/midtom1.ogg')],
+			["Hi Tom 2", "electrodrm/hightom2", new Audio('audio/electrodrm/hightom2.ogg')],
+			["Hi Tom 1", "electrodrm/hightom1", new Audio('audio/electrodrm/hightom1.ogg')],
+			["Snare", "electrodrm/snaredrum1", new Audio('audio/electrodrm/snaredrum1.ogg')],
+			["Kick 2", "electrodrm/kickdrum2", new Audio('audio/electrodrm/kickdrum2.ogg')],
+			["Kick 1", "electrodrm/kickdrum1", new Audio('audio/electrodrm/kickdrum1.ogg')]
+			
+		];
+		
+		// metodo apara reparar a aplicação
+		this.prepare = function(){
+			for(var i=0; i <  (this.drumSet.length); i++){
+				this.music[i] = []
+				$('#drumPad').append('<div id="'+this.drumSet[i]+'"><div class="namedPad">'+this.drumSet[i][0]+'</div> '+this.preparePads(this.drumSet[i][1], i)+'</div>');
+			}
+		}
+
+		// metodo para preparar os pads
+		this.preparePads = function(audioFile, line){
+			var html = '';
+			for(var i=1; i <=  (this.numberPads); i++){
+				this.music[line][i-1] = '';
+				html = html +  '<div class="pad" audio="'+audioFile+'" linePad="'+line+'" pad="'+(i-1)+'" ></div>';
+			}
+			return html;
+		}
+
+		// metodo que faz a maquina de bateria rodar
+		this.runMachine = function(){
+			$('#drumRowBeat .beat').removeClass('on');
+			$('#drumRowBeat .beat').eq(this.beat).toggleClass('on');
+			this.beat++;
+			
+			
+			for(var i=0; i <  (this.drumSet.length); i++){
+				var audioFile = this.music[i][this.beat-1];
+				this.runAudio(i, audioFile);
+			}
+			/**/
+			
+			if (this.beat >= 16){
+				this.beat = 0;
+			}
+			
+		}
+		
+		this.runAudio = function(i, audioFile){
+			if( audioFile ){
+			
+				this.drumSet[i][2].pause();
+				this.drumSet[i][2].currentTime = 0;
+				this.drumSet[i][2].play();
+				
+				//setTimeout(function(){ var audioElement = document.getElementById(audioFile).play(); audioElement.stop(); }, 1);	
+			}
+		}
+		
+		// metodo que faz a maquina de bateria parar
+		this.stopMachine = function(){
+			this.beat = 0;
+			$('#drumRowBeat .beat').removeClass('on');
+			window.clearTimeout(this.powerId);
+		}
+		
+		// metodo para ligar e desligar (toglet) a maquina de bateria
+		this.changePower = function(){
+			if (this.power){
+					this.stopMachine();
+			}else{
+				this.beat = 0;
+				this.power = true;				
+				this.powerId = setInterval(function(){drumDJ.runMachine();},250);
+			 } 		  
+		}
+		
+		// metodo para ligar e desligar (toglet) um pad especifico 
+		this.togglePad = function(p_padObject){
+			$(p_padObject).toggleClass('on');
+			if ( $(p_padObject).hasClass('on') ){
+				this.music[$(p_padObject).attr('linePad')][$(p_padObject).attr('pad')] = $(p_padObject).attr('audio');
+			}else{
+				this.music[$(p_padObject).attr('linePad')][$(p_padObject).attr('pad')] = false;
+			}
+			
+			//console.log(this.music);
+		}
+    }
+	
+	//--
+    var drumDJ = new drumDJ();
+    drumDJ.prepare();
+	
+	$('#drumPad .pad').click(function(){
+		drumDJ.togglePad(this);
+	});
+
+	$("#drumPanel .power").click(function(){
+		//alert('ligar');
+		//drumDJ.changePower();
+		
+	})
+	drumDJ.changePower();
+})
+    </script>
+
+  </head> 
+
+  <body>
+
+    <div id="drumPanel">
+      
+      
+      <div id="drumControllers">
+        <div id="display"></div>
+        <div id="bpm"></div>
+        <div id="musics"></div>
+      </div>
+
+
+      <div id="drumRowBeat">
+        <div class="beat"></div>
+        <div class="beat"></div>
+        <div class="beat"></div>
+        <div class="beat"></div>
+
+        <div class="beat"></div>
+        <div class="beat"></div>
+        <div class="beat"></div>
+        <div class="beat"></div>
+
+        <div class="beat"></div>
+        <div class="beat"></div>
+        <div class="beat"></div>
+        <div class="beat"></div>
+
+        <div class="beat"></div>
+        <div class="beat"></div>
+        <div class="beat"></div>
+        <div class="beat"></div>
+      </div>
+
+      <div id="drumPad">
+
+        
+      </div>
+	  
+	  <div class="power">
+		ligar/desligar
+	  </div>
+
+
+    </div>
+
+
+    <script type="application/javascript">
+    </script>
+
+  </body>
+</html>
